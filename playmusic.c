@@ -17,11 +17,13 @@
    point number between 0.0 and 1.0 inclusive.
 */
 
+#include "wave_header.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
 #include <math.h>
+#include <unistd.h>
 
 #define SAMPLE_RATE 44100
 #define NUM_NOTES (10*12)
@@ -31,7 +33,6 @@
 
 #define INT16_T_MAX (0x7FFF)
 
-
 void check_write(int w, int n)
 {
   if(w!=n)
@@ -40,51 +41,6 @@ void check_write(int w, int n)
       exit(1);
     }
 }
-
-/*
-void write_wave_header(FILE *outfile, int sample_rate, int nsamples)
-{
-  uint32_t chunksize;
-  uint32_t subchunk1size;
-  uint32_t subchunk2size;
-  uint16_t audioformat;
-  uint16_t numchannels;
-  uint32_t samplerate;
-  uint32_t byterate;
-  uint16_t blockalign;
-  uint16_t bitspersample;
-
-  subchunk1size = 16;  // always 16 for PCM data
-  audioformat = 1;    // this is the code for PCM
-  numchannels = 1;
-  samplerate = sample_rate;
-  bitspersample = sizeof(int16_t)*8;
-  byterate = samplerate * numchannels * bitspersample/8;
-  blockalign = numchannels * bitspersample/8;
-
-  chunksize = 4 + (8 + subchunk1size) + (8 + subchunk2size);
-
-  // write RIFF header
-  check_write(fwrite("RIFF",4,1,outfile),1);
-  check_write(fwrite((char*)&chunksize,4,1,outfile),1);
-  check_write(fwrite("WAVE",4,1,outfile),1);
-
-  // write format chunk
-  check_write(fwrite("fmt ",4,1,outfile),1);
-  check_write(fwrite((char*)&subchunk1size,sizeof(subchunk1size),1,outfile),1);
-  check_write(fwrite((char*)&audioformat,sizeof(audioformat),1,outfile),1);
-  check_write(fwrite((char*)&numchannels,sizeof(numchannels),1,outfile),1);
-  check_write(fwrite((char*)&samplerate,sizeof(samplerate),1,outfile),1);
-  check_write(fwrite((char*)&byterate,sizeof(byterate),1,outfile),1);
-  check_write(fwrite((char*)&blockalign,sizeof(blockalign),1,outfile),1);
-  check_write(fwrite((char*)&bitspersample,sizeof(bitspersample),1,outfile),1);
-  
-  // write header for data chunk
-  subchunk2size = nsamples * numchannels * sizeof(int16_t);
-  check_write(fwrite("data",4,1,outfile),1);
-  check_write(fwrite((char*)&subchunk2size,sizeof(subchunk2size),1,outfile),1);
-}
-*/
 
 /* if note is a midi number, then the frequency is:
    hz = pow(2,(note-69.0)/12.0) * 440;
@@ -191,7 +147,7 @@ int main(int argc, char **argv)
   num_samples = tempo * next_note.time * SAMPLE_RATE / 100;
   
   //deleted SAMPLE_RATE
-  write_wave_header(output,num_samples);
+  write_wave_header(STDOUT_FILENO,num_samples);
 
   srand(time(NULL));
   
