@@ -18,6 +18,7 @@
 */
 
 #include "wave_header.h"
+#include "time_it.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -101,6 +102,7 @@ struct filedat{
 */    
 int main(int argc, char **argv)
 {
+  //change this array so not everything is based on BASE_SIZE
   static double notes[NUM_NOTES][BASE_SIZE] = {0};
   static int position[NUM_NOTES] = {0};
   double temp;
@@ -117,7 +119,8 @@ int main(int argc, char **argv)
   int16_t sample;
   double MAX = 1.0;
   struct filedat next_note;
-  
+  time_it run_time; 
+ 
   if(argc < 2)
     scream_and_die(argv[0]);
   
@@ -138,6 +141,8 @@ int main(int argc, char **argv)
       perror("Unable to open input file");
       scream_and_die(argv[0]);
     }
+
+  time_it_start(&run_time);
 
   /* find time of for end of song */
   while((fread(&next_note,sizeof(next_note),1,input)==1)&&
@@ -179,6 +184,11 @@ int main(int argc, char **argv)
 		next_note.vol/32767.0);
       }
   }while(!feof(input) && (next_note.note > 0));  
+  
+  time_it_stop(&run_time);
+ 
+  time_it_report(&run_time, "Total Time: ");
+
   fclose(input);
   fclose(output);
   return 0;

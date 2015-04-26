@@ -46,7 +46,7 @@
 #include <unistd.h>
 
 /* A structure to hold timing information */
-typedef struct {
+typedef struct{
   clock_t start_time, end_time;
   struct tms start_cpu, end_cpu;
 }time_it;

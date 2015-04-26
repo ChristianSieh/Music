@@ -1,4 +1,4 @@
-#include <time_it.h>
+#include "time_it.h"
 #include <stdio.h>
 
 
@@ -14,6 +14,7 @@ void time_it_stop(time_it *t)
 
 void time_it_report(time_it *t,char *tag)
 {
+printf("\n");
 printf("Real Time %s: %lf\nUser CPU Time %s: %lf\nSystem CPU Time %s: %lf\n",
 	 tag,
 	 ((double)t->end_time -t-> start_time)/sysconf(_SC_CLK_TCK),

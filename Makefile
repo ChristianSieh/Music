@@ -1,6 +1,6 @@
 
 
-OBJS=playmusic.o wave_header.o
+OBJS=playmusic.o wave_header.o time_it.o
 
 LFLAGS=
 
