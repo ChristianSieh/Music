@@ -26,22 +26,13 @@
 #include <math.h>
 #include <unistd.h>
 
-#define SAMPLE_RATE 44100
-#define NUM_NOTES (10*12)
-#define BASE_SIZE (44100/16)
-#define SMPLS_PER_MS (SAMPLE_RATE/100)
-#define MAX_SECONDS 600
+#define SAMPLE_RATE 44100 //Can't change this line
+#define NUM_NOTES (10*12) //might be able to change this line
+#define BASE_SIZE (44100/16) //Can't change this line
+#define SMPLS_PER_MS (SAMPLE_RATE/100) //Can't change this line
+
 
 #define INT16_T_MAX (0x7FFF)
-
-void check_write(int w, int n)
-{
-  if(w!=n)
-    {
-      perror("Error writing to wave file\n");
-      exit(1);
-    }
-}
 
 /* if note is a midi number, then the frequency is:
    hz = pow(2,(note-69.0)/12.0) * 440;
@@ -51,7 +42,7 @@ int array_size(int note)
 {
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
-  return (int)(SAMPLE_RATE/hz + 0.5);
+  return (int)(SAMPLE_RATE/hz);
 }
 
 /* Plucking a string is simulated by filling the array with
@@ -111,13 +102,10 @@ int main(int argc, char **argv)
   FILE *output = stdout;
   int current_time = 0;
   int current_sample = 0;
-  double next_volume;
   double tempo = 1.0;
   char *endptr;
   int num_samples;
-  static uint16_t data[2048];
   int16_t sample;
-  double MAX = 1.0;
   struct filedat next_note;
   time_it run_time; 
  
@@ -149,7 +137,7 @@ int main(int argc, char **argv)
 	(next_note.note != 1));
   fseek(input,0,SEEK_SET);
   
-  num_samples = tempo * next_note.time * SAMPLE_RATE / 100;
+  num_samples = tempo * next_note.time * SMPLS_PER_MS;
   
   //deleted SAMPLE_RATE
   write_wave_header(STDOUT_FILENO,num_samples);
@@ -171,9 +159,11 @@ int main(int argc, char **argv)
 		temp = 0.0;
 		// update each active string and add its output to the sum
 		for(j = 0; j< NUM_NOTES; j++)
+		{
 		  temp += update(notes[j],array_size(j),&position[j]);
+		}
 		// write a sample to the wave file 
-		sample = (int16_t)((temp/MAX) * (INT16_T_MAX-1));
+		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		fwrite(&sample,sizeof(int16_t),1,output);
 	      }
 	    current_sample += SMPLS_PER_MS;
