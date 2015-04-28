@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 	  pluck(notes[next_note.note],array_size(next_note.note),
 		next_note.vol/32767.0);
       }
-  }while(!feof(input) && (next_note.note > 0));  
+  }while((next_note.note > 0) && !feof(input));  
   
   //Empty sam_buffer
   if(sam_buffer_pos > 0)
