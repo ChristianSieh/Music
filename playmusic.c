@@ -55,13 +55,13 @@ void pluck(double buffer[], int size, double volume)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
-/* The update function treats the array as a queue.  The
+/* The average function treats the array as a queue.  The
    first item is taken from the queue, then averaged with
    the next item.  The result of the average is added to
    the end of the queue and returned by the function as the
    next audio sample.
 */
-double update(double buffer[], int size, int *position)
+double average(double buffer[], int size, int *position)
 {
   int nextpos;
   double value;
@@ -157,10 +157,10 @@ int main(int argc, char **argv)
 	    for(i=current_sample; i < current_sample + SMPLS_PER_MS; i++)
 	      {
 		temp = 0.0;
-		// update each active string and add its output to the sum
+		// average each active string and add its output to the sum
 		for(j = 0; j< NUM_NOTES; j++)
 		{
-		  temp += update(notes[j],array_size(j),&position[j]);
+		  temp += average(notes[j],array_size(j),&position[j]);
 		}
 		// write a sample to the wave file 
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
