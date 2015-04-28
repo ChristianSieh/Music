@@ -56,7 +56,7 @@ int array_size(int note)
 void pluck(double buffer[], int size, double volume)
 {
   int i;
-  for(i=0;i<size;i++)
+  for(i=size; i--; )
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
@@ -159,11 +159,11 @@ int main(int argc, char **argv)
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
-	    for(i = 0; i < SMPLS_PER_MS; i++)
+	    for(i = 441; i--; )
 	      {
 		temp = 0.0;
 		// average each active string and add its output to the sum
-		for(j = 0; j< NUM_NOTES; j++)
+		for(j = 120; j--; )
 		{
 		  temp += average(notes[j],array_size(j),&position[j]);
 		}
