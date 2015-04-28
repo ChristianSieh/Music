@@ -99,17 +99,17 @@ int main(int argc, char **argv)
 {
   //change this array so not everything is based on BASE_SIZE
   static double notes[NUM_NOTES][BASE_SIZE] = {0};
-  static int position[NUM_NOTES] = {0};
+  static unsigned int position[NUM_NOTES] = {0};
   static int16_t sam_buffer[SAMPLE_RATE];
-  static int sam_buffer_pos = 0;
+  static unsigned int sam_buffer_pos = 0;
   double temp;
-  int i,j;
+  register unsigned int i,j;
   FILE *input;
   FILE *output = stdout;
-  int current_time = 0;
+  register unsigned int current_time = 0;
   double tempo = 1.0;
   char *endptr;
-  int num_samples;
+  register unsigned int num_samples;
   int16_t sample;
   struct filedat next_note;
   time_it run_time; 

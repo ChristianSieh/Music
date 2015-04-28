@@ -9,7 +9,7 @@ CFLAGS=-I.
 SFLAGS=
 
 playmusic: $(OBJS)
-	gcc -o2 -o playmusic $(OBJS) -lm -pg
+	gcc -o2 -o playmusic $(OBJS) -lm -pg 
 
 .S.o:
 	gcc $(SFLAGS) -c $< 
