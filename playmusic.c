@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
   time_it_start(&run_time);
 
-  /* find time of for end of song */
+  //find time of for end of song
   while((fread(&next_note,sizeof(next_note),1,input)==1)&&
 	(next_note.note != 1));
   fseek(input,0,SEEK_SET);
@@ -165,11 +165,11 @@ int main(int argc, char **argv)
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		fwrite(&sample,sizeof(int16_t),1,output);
 	      }
-	    // current_sample += SMPLS_PER_MS;
-		i = 0;
-		current_time++;
+	      i = 0;
+	      current_time++;
 	  }
-	if(next_note.note >= 0) // pluck the next note
+	//pluck the next note
+	if(next_note.note > 0)
 	  pluck(notes[next_note.note],array_size(next_note.note),
 		next_note.vol/32767);
       }
