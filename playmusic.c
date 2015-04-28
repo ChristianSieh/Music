@@ -66,15 +66,20 @@ extern void udiv32(int quotient, int remainder);
    first item is taken from the queue, then averaged with
    the next item.  The result of the average is added to
    the end of the queue and returned by the function as the
-   next audio sample.
 */
+
 double average(double buffer[], int size, int *position)
 {
-  int nextpos = size;
-  int quotient = (*position+1);
+  //int nextpos = size;
+  //int quotient = (*position+1);
+  int nextpos;
   double value;
-  udiv32(quotient, nextpos); 
- // nextpos = (*position+1)%size;
+  //fprintf(stderr,"Before Divide Quotient: %d Nextpos: %d ", quotient, nextpos);
+  //udiv32(quotient, nextpos); 
+  //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
+  //nextpos = quotient%size; 
+  //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
+  nextpos = (*position+1)%size;
   buffer[*position] = value = 0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
   return value;
