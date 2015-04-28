@@ -171,7 +171,7 @@ int main(int argc, char **argv)
 	//pluck the next note
 	if(next_note.note >= 0)
 	  pluck(notes[next_note.note],array_size(next_note.note),
-		next_note.vol/32767);
+		next_note.vol/32767.0);
       }
   }while(!feof(input) && (next_note.note > 0));  
   
