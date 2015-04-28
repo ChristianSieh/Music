@@ -42,7 +42,7 @@ int array_size(int note)
 {
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
-  return (int)(SAMPLE_RATE/hz);
+  return (int)(SAMPLE_RATE/hz + 0.5);
 }
 
 /* Plucking a string is simulated by filling the array with
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
 	      current_time++;
 	  }
 	//pluck the next note
-	if(next_note.note > 0)
+	if(next_note.note >= 0)
 	  pluck(notes[next_note.note],array_size(next_note.note),
 		next_note.vol/32767);
       }
