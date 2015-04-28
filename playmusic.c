@@ -27,9 +27,9 @@
 #include <unistd.h>
 
 #define SAMPLE_RATE 44100 //Can't change this line
-#define NUM_NOTES (10*12) //might be able to change this line
+#define NUM_NOTES (120) //might be able to change this line
 #define BASE_SIZE (44100/16) //Can't change this line
-#define SMPLS_PER_MS (SAMPLE_RATE/100) //Can't change this line
+#define SMPLS_PER_MS (441) //Can't change this line
 
 
 #define INT16_T_MAX (0x7FFF)
@@ -40,9 +40,14 @@
 */
 int array_size(int note)
 {
+  static int memory[256] = {0};
   double hz;
-  hz = pow(2,(note-69.0)/12.0) * 440;
-  return (int)(SAMPLE_RATE/hz + 0.5);
+  if(memory[note] == 0)
+  {
+	hz = pow(2,(note-69.0)/12.0) * 440;
+	memory[note] = (int)(SAMPLE_RATE/hz + 0.5);
+  }
+  return memory[note];
 }
 
 /* Plucking a string is simulated by filling the array with
@@ -96,6 +101,8 @@ int main(int argc, char **argv)
   //change this array so not everything is based on BASE_SIZE
   static double notes[NUM_NOTES][BASE_SIZE] = {0};
   static int position[NUM_NOTES] = {0};
+  static int16_t sam_buffer[SAMPLE_RATE];
+  static int sam_buffer_pos = 0;
   double temp;
   int i,j;
   FILE *input;
@@ -107,6 +114,8 @@ int main(int argc, char **argv)
   int16_t sample;
   struct filedat next_note;
   time_it run_time; 
+
+
  
   if(argc < 2)
     scream_and_die(argv[0]);
@@ -138,7 +147,7 @@ int main(int argc, char **argv)
   
   num_samples = tempo * next_note.time * SMPLS_PER_MS;
   
-  //deleted SAMPLE_RATE
+  
   write_wave_header(STDOUT_FILENO,num_samples);
 
   srand(time(NULL));
@@ -163,7 +172,13 @@ int main(int argc, char **argv)
 		}
 		// write a sample to the wave file 
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
-		fwrite(&sample,sizeof(int16_t),1,output);
+		//fwrite(&sample,sizeof(int16_t),1,output);
+		if(sam_buffer_pos >= SAMPLE_RATE)
+		{
+		fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
+		sam_buffer_pos = 0;
+		}
+		sam_buffer[sam_buffer_pos++] = sample;
 	      }
 	      i = 0;
 	      current_time++;
@@ -175,6 +190,13 @@ int main(int argc, char **argv)
       }
   }while(!feof(input) && (next_note.note > 0));  
   
+  //Empty sam_buffer
+  if(sam_buffer_pos > 0)
+  {
+	fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
+	sam_buffer_pos = 0;
+  }
+
   time_it_stop(&run_time);
  
   time_it_report(&run_time, "Total Time: ");
