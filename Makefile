@@ -1,6 +1,6 @@
 
 
-OBJS=playmusic.o wave_header.o time_it.o
+OBJS=playmusic.o wave_header.o time_it.o divide.o
 
 LFLAGS=
 
@@ -9,8 +9,7 @@ CFLAGS=-I.
 SFLAGS=
 
 playmusic: $(OBJS)
-	gcc -o2 -o playmusic $(OBJS) -lm -pg 
-
+	gcc -o2 -o playmusic $(OBJS) -lm -pg
 .S.o:
 	gcc $(SFLAGS) -c $< 
 

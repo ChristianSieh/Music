@@ -60,6 +60,8 @@ void pluck(double buffer[], int size, double volume)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
+extern void udiv32(int quotient, int remainder);
+
 /* The average function treats the array as a queue.  The
    first item is taken from the queue, then averaged with
    the next item.  The result of the average is added to
@@ -68,9 +70,11 @@ void pluck(double buffer[], int size, double volume)
 */
 double average(double buffer[], int size, int *position)
 {
-  int nextpos;
+  int nextpos = size;
+  int quotient = (*position+1);
   double value;
-  nextpos = (*position+1)%size;
+  udiv32(quotient, nextpos); 
+ // nextpos = (*position+1)%size;
   buffer[*position] = value = 0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
   return value;
@@ -102,7 +106,8 @@ int main(int argc, char **argv)
   static unsigned int position[NUM_NOTES] = {0};
   static int16_t sam_buffer[SAMPLE_RATE];
   static unsigned int sam_buffer_pos = 0;
-  double temp;
+  int whatever[NUM_NOTES] = {0};
+//  double temp;
   register unsigned int i,j;
   FILE *input;
   FILE *output = stdout;
@@ -148,7 +153,10 @@ int main(int argc, char **argv)
   write_wave_header(STDOUT_FILENO,num_samples);
 
   srand(time(NULL));
-  
+  for(i = 0; i < NUM_NOTES; i++)
+  {
+   whatever[i] = array_size(i);	
+  }
   do{
     // read the next note
     if(fread(&next_note,sizeof(next_note),1,input)==1)
@@ -156,16 +164,17 @@ int main(int argc, char **argv)
 	next_note.time = (int)(next_note.time * tempo);
 	// generate sound, one ms at a time, until we need to start
 	// the next note
+		
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
 	    for(i = 441; i--; )
 	      {
-		temp = 0.0;
+		double temp = 0.0;
 		// average each active string and add its output to the sum
 		for(j = 120; j--; )
 		{
-		  temp += average(notes[j],array_size(j),&position[j]);
+		  temp += average(notes[j],whatever[j],&position[j]);
 		}
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		//fwrite(&sample,sizeof(int16_t),1,output);
