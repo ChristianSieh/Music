@@ -71,7 +71,7 @@ double average(double buffer[], int size, int *position)
   int nextpos;
   double value;
   nextpos = (*position+1)%size;
-  buffer[*position] = value = 0.996*(buffer[*position]+buffer[nextpos])*0.5;
+  buffer[*position] = value = 0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
   return value;
 }
@@ -167,13 +167,12 @@ int main(int argc, char **argv)
 		{
 		  temp += average(notes[j],array_size(j),&position[j]);
 		}
-		// write a sample to the wave file 
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		//fwrite(&sample,sizeof(int16_t),1,output);
 		if(sam_buffer_pos >= SAMPLE_RATE)
 		{
-		fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
-		sam_buffer_pos = 0;
+		  fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
+		  sam_buffer_pos = 0;
 		}
 		sam_buffer[sam_buffer_pos++] = sample;
 	      }
