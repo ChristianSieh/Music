@@ -101,7 +101,6 @@ int main(int argc, char **argv)
   FILE *input;
   FILE *output = stdout;
   int current_time = 0;
-  int current_sample = 0;
   double tempo = 1.0;
   char *endptr;
   int num_samples;
@@ -154,7 +153,7 @@ int main(int argc, char **argv)
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
-	    for(i=current_sample; i < current_sample + SMPLS_PER_MS; i++)
+	    for(i = 0; i < SMPLS_PER_MS; i++)
 	      {
 		temp = 0.0;
 		// average each active string and add its output to the sum
@@ -166,12 +165,13 @@ int main(int argc, char **argv)
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		fwrite(&sample,sizeof(int16_t),1,output);
 	      }
-	    current_sample += SMPLS_PER_MS;
-	    current_time++;
+	    // current_sample += SMPLS_PER_MS;
+		i = 0;
+		current_time++;
 	  }
 	if(next_note.note >= 0) // pluck the next note
 	  pluck(notes[next_note.note],array_size(next_note.note),
-		next_note.vol/32767.0);
+		next_note.vol/32767);
       }
   }while(!feof(input) && (next_note.note > 0));  
   
