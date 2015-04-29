@@ -30,7 +30,7 @@
 #define NUM_NOTES (120) //might be able to change this line
 #define BASE_SIZE (44100/16) //Can't change this line
 #define SMPLS_PER_MS (441) //Can't change this line
-#define CUTOFF_THRESHOLD .03125
+#define CUTOFF_THRESHOLD .005
 
 #define INT16_T_MAX (0x7FFF)
 
@@ -78,7 +78,7 @@ static inline double average(double buffer[], int size, int *position)
   //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
   nextpos = (*position+1)%size;
   buffer[*position] = 0.498*(buffer[*position]+buffer[nextpos]);
-  *position = nextpos;
+//  *position = nextpos;
   return buffer[*position];
 }
 
@@ -191,6 +191,7 @@ int main(int argc, char **argv)
 			  max[j] = temp;
 			else if(max[j] < temp)
 			  max[j] = temp;
+			position[j] = (position[j]+1)%frequency[j];
 		    }
 		  }
 		}
