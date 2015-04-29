@@ -13,7 +13,7 @@
    an integer specifying the time at which a note is to be played, in
    milliseconds since the start of the song.  The second value is the
    MIDI number of the note to be played, and the third number is the
-   relative volume of the note.  The volume is given as a floating
+   relative volume of the note.  The volume is given as a doubleing
    point number between 0.0 and 1.0 inclusive.
 */
 
@@ -125,7 +125,7 @@ int main(int argc, char **argv)
   
   if(argc == 3)
     {
-      // try to interpret argv[2] as a float
+      // try to interpret argv[2] as a double
       tempo = strtof(argv[2],&endptr);
       if(endptr==argv[2] || tempo<0.25 || tempo > 4.0)
 	{
@@ -165,6 +165,7 @@ int main(int argc, char **argv)
     if(fread(&next_note,sizeof(next_note),1,input)==1)
       {
 	next_note.time = (int)(next_note.time * tempo);
+//	fprintf(stderr,"Note Time: %d ",next_note.time);
 	// generate sound, one ms at a time, until we need to start
 	// the next note	
 	while(current_time < next_note.time)
