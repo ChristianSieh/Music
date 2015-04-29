@@ -30,7 +30,7 @@
 #define NUM_NOTES (120) //might be able to change this line
 #define BASE_SIZE (44100/16) //Can't change this line
 #define SMPLS_PER_MS (441) //Can't change this line
-
+#define CUTOFF_THRESHOLD .03125
 
 #define INT16_T_MAX (0x7FFF)
 
@@ -66,11 +66,11 @@ extern void udiv32(int quotient, int remainder);
    the end of the queue and returned by the function as the
 */
 
-double average(double buffer[], int size, int *position)
+static inline double average(double buffer[], int size, int *position)
 {
   //int nextpos = size;
   //int quotient = (*position+1);
-  int nextpos;
+  static unsigned int nextpos;
   //fprintf(stderr,"Before Divide Quotient: %d Nextpos: %d ", quotient, nextpos);
   //udiv32(quotient, nextpos); 
   //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
@@ -109,12 +109,14 @@ int main(int argc, char **argv)
   static unsigned int sam_buffer_pos = 0;
   static unsigned int frequency[NUM_NOTES] = {0};
   static unsigned int active[NUM_NOTES] = {0};
-//  double temp;
+  static double max[NUM_NOTES] = {0};
+  double temp;
   register unsigned int i,j;
   FILE *input;
   FILE *output = stdout;
   register unsigned int current_time = 0;
   double tempo = 1.0;
+  double sum;
   char *endptr;
   register unsigned int num_samples;
   int16_t sample;
@@ -173,16 +175,26 @@ int main(int argc, char **argv)
 	    // generate another millsecond of sound 
 	    for(i = 441; i--;)
 	      {
-		double temp = 0.0;
+		sum = 0.0;
 		// average each active string and add its output to the sum
 		for(j = 120; j--;)
 		{
 		  if(active[j] == 1)
 	          { 
-		    temp += average(notes[j],frequency[j],&position[j]);
+		    if(position[j] == 0 && max[j] < CUTOFF_THRESHOLD)
+		    	active[j] = 0;
+		    else
+		    {
+		        temp = average(notes[j],frequency[j],&position[j]);
+		        sum += temp;
+			if(position[j] == 0)
+			  max[j] = temp;
+			else if(max[j] < temp)
+			  max[j] = temp;
+		    }
 		  }
 		}
-		sample = (int16_t)(temp * (INT16_T_MAX-1));
+		sample = (int16_t)(sum * (INT16_T_MAX-1));
 		if(sam_buffer_pos >= SAMPLE_RATE)
 		{
 		  fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
@@ -199,6 +211,7 @@ int main(int argc, char **argv)
 	  pluck(notes[next_note.note],frequency[next_note.note],
 		next_note.vol/32767.0);
           active[next_note.note] = 1;
+	  max[next_note.note] = 1;
 	}
       }
   }while(!feof(input));  
