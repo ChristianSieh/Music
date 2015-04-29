@@ -38,12 +38,13 @@
    hz = pow(2,(note-69.0)/12.0) * 440;
    and the array size needed is SAMPLE_RATE/Hz        
 */
-int array_size(int note)
+static unsigned int array_size(int note)
 {
   static unsigned int N;
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
   N = (int)(SAMPLE_RATE/hz + 0.5);
+  fprintf(stderr, "Fundamental Frequency for %d: %d\n",note,N);
   return N;
 }
 
@@ -70,16 +71,15 @@ double average(double buffer[], int size, int *position)
   //int nextpos = size;
   //int quotient = (*position+1);
   int nextpos;
-  double value;
   //fprintf(stderr,"Before Divide Quotient: %d Nextpos: %d ", quotient, nextpos);
   //udiv32(quotient, nextpos); 
   //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
   //nextpos = quotient%size; 
   //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
   nextpos = (*position+1)%size;
-  buffer[*position] = value = 0.498*(buffer[*position]+buffer[nextpos]);
+  buffer[*position] = 0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
-  return value;
+  return buffer[*position];
 }
 
 void scream_and_die(char progname[])
@@ -107,7 +107,8 @@ int main(int argc, char **argv)
   static unsigned int position[NUM_NOTES] = {0};
   static int16_t sam_buffer[SAMPLE_RATE];
   static unsigned int sam_buffer_pos = 0;
-  int whatever[NUM_NOTES] = {0};
+  static unsigned int frequency[NUM_NOTES] = {0};
+  static unsigned int active[NUM_NOTES] = {0};
 //  double temp;
   register unsigned int i,j;
   FILE *input;
@@ -157,7 +158,7 @@ int main(int argc, char **argv)
 
   for(i = 120; i--; )
   {
-   whatever[i] = array_size(i);	
+   frequency[i] = array_size(i);	
   }
 
   do{
@@ -177,7 +178,12 @@ int main(int argc, char **argv)
 		// average each active string and add its output to the sum
 		for(j = 120; j--; )
 		{
-	          temp += average(notes[j],whatever[j],&position[j]);
+		  fprintf(stderr,"Active[%d] = %d\n",j,active[j]);
+		  if(active[j] == 1); 
+	          { 
+		    temp += average(notes[j],frequency[j],&position[j]);
+		    fprintf(stderr,"HERE\n");
+		  }
 		}
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
 		if(sam_buffer_pos >= SAMPLE_RATE)
@@ -192,8 +198,11 @@ int main(int argc, char **argv)
 	  }
 	//pluck the next note
 	if(next_note.note >= 0)
-	  pluck(notes[next_note.note],whatever[next_note.note],
+	{
+	  pluck(notes[next_note.note],frequency[next_note.note],
 		next_note.vol/32767.0);
+          active[next_note.note] = 1;
+	}
       }
   }while(!feof(input));  
   
