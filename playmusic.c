@@ -44,7 +44,7 @@ static unsigned int array_size(int note)
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
   N = (int)(SAMPLE_RATE/hz + 0.5);
-  fprintf(stderr, "Fundamental Frequency for %d: %d\n",note,N);
+//  fprintf(stderr, "Fundamental Frequency for %d: %d\n",note,N);
   return N;
 }
 
@@ -166,23 +166,20 @@ int main(int argc, char **argv)
     if(fread(&next_note,sizeof(next_note),1,input)==1)
       {
 	next_note.time = (int)(next_note.time * tempo);
-//	fprintf(stderr,"Note Time: %d ",next_note.time);
 	// generate sound, one ms at a time, until we need to start
 	// the next note	
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
-	    for(i = 441; i--; )
+	    for(i = 441; i--;)
 	      {
 		double temp = 0.0;
 		// average each active string and add its output to the sum
-		for(j = 120; j--; )
+		for(j = 120; j--;)
 		{
-		  fprintf(stderr,"Active[%d] = %d\n",j,active[j]);
-		  if(active[j] == 1); 
+		  if(active[j] == 1)
 	          { 
 		    temp += average(notes[j],frequency[j],&position[j]);
-		    fprintf(stderr,"HERE\n");
 		  }
 		}
 		sample = (int16_t)(temp * (INT16_T_MAX-1));
