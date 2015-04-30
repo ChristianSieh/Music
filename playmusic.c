@@ -54,7 +54,7 @@ static unsigned int array_size(int note)
 void pluck(double buffer[], int size, double volume)
 {
   int i;
-  for(i=size; i--; )
+  for(i = 0; i < size; i++)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
@@ -66,7 +66,7 @@ extern void udiv32(int quotient, int remainder);
    the end of the queue and returned by the function as the
 */
 
-static double average(double buffer[], int size, int *position)
+static double average(double buffer[], int *size, int *position)
 {
   //int nextpos = size;
   //int quotient = (*position+1);
@@ -76,7 +76,7 @@ static double average(double buffer[], int size, int *position)
   //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
   //nextpos = quotient%size; 
   //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
-  nextpos = (*position+1)%size;
+  nextpos = (*position+1)%*size;
   buffer[*position] = 0.498*(buffer[*position]+buffer[nextpos]);
 //  *position = nextpos;
   return buffer[*position];
@@ -109,10 +109,11 @@ int main(int argc, char **argv)
   static unsigned int position[NUM_NOTES] = {0};
   static int16_t sam_buffer[SAMPLE_RATE];
   static unsigned int sam_buffer_pos = 0;
-  static unsigned int frequency[NUM_NOTES] = {2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2697, 2546, 2403, 2268, 2141, 2020, 1907, 1800, 1699, 1604, 1514, 1429, 1348, 1273, 1201, 1134, 1070, 1010, 954, 900, 849, 802, 757, 714, 674, 636, 601, 567, 535, 505, 477, 450, 425401, 378, 357, 337, 318, 300, 283, 268, 253, 238, 225, 212, 200, 189, 179, 169, 159, 150, 142, 134, 126, 119, 113, 106, 100, 95, 89, 84, 80, 75, 71, 67, 63, 60, 56, 53, 50, 47, 45, 42, 40, 38, 35, 33, 32, 30, 28, 27, 25, 24, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 13, 12, 11, 11, 10, 9, 9, 8, 8, 7, 7, 7, 6, 6, 6};
+  static unsigned int frequency[NUM_NOTES];
   static unsigned int active[NUM_NOTES] = {0};
-  static double max[NUM_NOTES] = {0};
-  double temp;
+  static unsigned int max[NUM_NOTES] = {0};
+  unsigned int temp;
+  unsigned int currentSample = 0;
   register unsigned int i,j;
   FILE *input;
   FILE *output = stdout;
@@ -145,13 +146,12 @@ int main(int argc, char **argv)
       perror("Unable to open input file");
       scream_and_die(argv[0]);
     }
-/*   
-  for(i = 120; i--; )
+   
+  for(i = 0; i < 120; i++)
   {
    frequency[i] = array_size(i);	
-   fprintf(stderr,"%d\n",frequency[i]);
   }
-*/
+
 /*
   for(i = 0; i < 120; i++ )
   {
@@ -182,37 +182,33 @@ int main(int argc, char **argv)
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
-	    for(i = 441; i--;)
+	    for(i = 0; i < 441; i++)
 	      {
 		sum = 0.0;
 		// average each active string and add its output to the sum
-		for(j = 120; j--;)
+		for(j = 0; j < temp; j++)
 		{
-		  if(active[j] == 1)
-	          { 
-		    if(position[j] == 0 && max[j] < CUTOFF_THRESHOLD)
-		    	active[j] = 0;
-		    else
-		    {
-		        temp = average(notes[j],frequency[j],&position[j]);
-		        sum += temp;
-			if(position[j] == 0)
-			  max[j] = temp;
-			else if(max[j] < temp)
-			  max[j] = temp;
-			position[j] = (position[j]+1)%frequency[j];
-		    }
+	          sum += average(notes[active[j]],&frequency[active[j]],
+		  &position[active[j]]);
+		  if(max[j] < currentSample + i)
+		  {
+			active[j] = active[temp - 1];
+			active[temp - 1] = 0;
+			max[j] = max[temp - 1];
+			max[temp - 1] = 0;
+			temp--;
+			j--;  
 		  }
 		}
-		sample = (int16_t)(sum * (INT16_T_MAX-1));
+		sample = (int16_t)(sum * 32766);
 		if(sam_buffer_pos >= SAMPLE_RATE)
 		{
 		  fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
 		  sam_buffer_pos = 0;
 		}
-		sam_buffer[sam_buffer_pos++] = sample;
+		  sam_buffer[sam_buffer_pos++] = sample;
 	      }
-	      i = 0;
+	      currentSample += 441;
 	      current_time++;
 	  }
 	//pluck the next note
@@ -220,8 +216,10 @@ int main(int argc, char **argv)
 	{
 	  pluck(notes[next_note.note],frequency[next_note.note],
 		next_note.vol/32767.0);
-          active[next_note.note] = 1;
-	  max[next_note.note] = 1;
+	  for(i = 0; i < temp; i++)
+            if(next_note.note == active[i])
+	     break;
+	  active[i] = next_note.note;
 	}
       }
   }while(!feof(input));   
