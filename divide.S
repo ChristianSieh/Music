@@ -1,7 +1,5 @@
 	.text
 	.align	2
-str:	.asciz	"%d"
-	.align	2
 @@@ -----------------------------------------------------------------
 	@@ udiv32 takes a 32-bit unsigned dividend in r0 and
 	@@ divides it by a 32-bit unsigned divisor in r1.
@@ -9,10 +7,7 @@ str:	.asciz	"%d"
 	@@ It calls no other functions and only 
         @@ uses r0-r3. We don't need to use the stack
 	.global	udiv32
-udiv32:	stmfd	sp!, {r4, r5, lr}
-@@	ldr	r0,=str
-@@	bl	printf
-	b	quitudiv32
+udiv32:	stmfd	sp!, {lr}
 	cmp	r1,#0		@ if divisor == zero
 	beq	quitudiv32	@   exit immediately
 	mov     r2,r1           @ move divisor to r2
@@ -34,7 +29,8 @@ divloop:cmp     r1,r2           @ if dividend >= divisor
                                 @ one bit past where it started, and we
                                 @ are done.
 quitudiv32:	
-	ldmfd	sp!, {r4, r5, lr}
+	mov	r0,r1
+	ldmfd	sp!, {lr}
         mov     pc,lr
 
 

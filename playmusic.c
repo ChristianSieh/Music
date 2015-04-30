@@ -44,7 +44,6 @@ static unsigned int array_size(int note)
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
   N = (int)(SAMPLE_RATE/hz + 0.5);
-//  fprintf(stderr, "Fundamental Frequency for %d: %d\n",note,N);
   return N;
 }
 
@@ -58,7 +57,7 @@ void pluck(double buffer[], int size, double volume)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
-extern void udiv32(int quotient, int remainder);
+long udiv32(int quotient, int remainder);
 
 /* The average function treats the array as a queue.  The
    first item is taken from the queue, then averaged with
@@ -68,16 +67,14 @@ extern void udiv32(int quotient, int remainder);
 
 static double average(double buffer[], int size, int *position)
 {
-  //int nextpos = size;
-  //int quotient = (*position+1);
-  static unsigned int nextpos;
+  unsigned int nextpos;
+  unsigned int quotient = (*position+1);
   double value;
-  //fprintf(stderr,"Before Divide Quotient: %d Nextpos: %d ", quotient, nextpos);
-  //udiv32(quotient, nextpos); 
-  //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
-  //nextpos = quotient%size; 
-  //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
-  nextpos = (*position+1)%size;
+  //fprintf(stderr,"Before Divide Quotient: %d Size: %d\n", quotient, size);
+  nextpos = udiv32(quotient, size);
+//  fprintf(stderr,"After Divide Quotient: %d Size: %d Nextpos: %d\n", quotient, size, nextpos);
+  //fprintf(stderr, "Quotient: %d Size: %d\n",quotient,size);
+  //nextpos = (*position+1)%size;
   buffer[*position] = value =  0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
   return value;
@@ -184,7 +181,7 @@ int main(int argc, char **argv)
 	while(current_time < next_note.time)
 	  {
 	    // generate another millsecond of sound 
-	    for(i = 0; i < 441; i++)
+	    for(i = 441; i--; )
 	      {
 		sum = 0.0;
 		// average each active string and add its output to the sum
