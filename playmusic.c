@@ -66,7 +66,7 @@ extern void udiv32(int quotient, int remainder);
    the end of the queue and returned by the function as the
 */
 
-static inline double average(double buffer[], int size, int *position)
+static double average(double buffer[], int size, int *position)
 {
   //int nextpos = size;
   //int quotient = (*position+1);
@@ -104,10 +104,12 @@ struct filedat{
 int main(int argc, char **argv)
 {
   static double notes[NUM_NOTES][BASE_SIZE] = {0};
+//  static double **notes;
+//  notes = (double **) malloc(sizeof(double *) * 120);
   static unsigned int position[NUM_NOTES] = {0};
   static int16_t sam_buffer[SAMPLE_RATE];
   static unsigned int sam_buffer_pos = 0;
-  static unsigned int frequency[NUM_NOTES] = {0};
+  static unsigned int frequency[NUM_NOTES] = {2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2756, 2697, 2546, 2403, 2268, 2141, 2020, 1907, 1800, 1699, 1604, 1514, 1429, 1348, 1273, 1201, 1134, 1070, 1010, 954, 900, 849, 802, 757, 714, 674, 636, 601, 567, 535, 505, 477, 450, 425401, 378, 357, 337, 318, 300, 283, 268, 253, 238, 225, 212, 200, 189, 179, 169, 159, 150, 142, 134, 126, 119, 113, 106, 100, 95, 89, 84, 80, 75, 71, 67, 63, 60, 56, 53, 50, 47, 45, 42, 40, 38, 35, 33, 32, 30, 28, 27, 25, 24, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 13, 12, 11, 11, 10, 9, 9, 8, 8, 7, 7, 7, 6, 6, 6};
   static unsigned int active[NUM_NOTES] = {0};
   static double max[NUM_NOTES] = {0};
   double temp;
@@ -143,7 +145,19 @@ int main(int argc, char **argv)
       perror("Unable to open input file");
       scream_and_die(argv[0]);
     }
-
+/*   
+  for(i = 120; i--; )
+  {
+   frequency[i] = array_size(i);	
+   fprintf(stderr,"%d\n",frequency[i]);
+  }
+*/
+/*
+  for(i = 0; i < 120; i++ )
+  {
+	notes[i] = (double *) malloc(sizeof(double) * frequency[i]);
+  }
+*/
   time_it_start(&run_time);
 
   //find time of for end of song
@@ -157,11 +171,6 @@ int main(int argc, char **argv)
   write_wave_header(STDOUT_FILENO,num_samples);
 
   srand(time(NULL));
-
-  for(i = 120; i--; )
-  {
-   frequency[i] = array_size(i);	
-  }
 
   do{
     // read the next note
@@ -215,7 +224,7 @@ int main(int argc, char **argv)
 	  max[next_note.note] = 1;
 	}
       }
-  }while(!feof(input));  
+  }while(!feof(input));   
   
   //Empty sam_buffer
   if(sam_buffer_pos > 0)
@@ -223,9 +232,9 @@ int main(int argc, char **argv)
 	fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
 	sam_buffer_pos = 0;
   }
-
-  time_it_stop(&run_time);
  
+  time_it_stop(&run_time);
+
   time_it_report(&run_time, "Total Time: ");
 
   fclose(input);
