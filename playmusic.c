@@ -66,20 +66,21 @@ extern void udiv32(int quotient, int remainder);
    the end of the queue and returned by the function as the
 */
 
-static double average(double buffer[], int *size, int *position)
+static double average(double buffer[], int size, int *position)
 {
   //int nextpos = size;
   //int quotient = (*position+1);
   static unsigned int nextpos;
+  double value;
   //fprintf(stderr,"Before Divide Quotient: %d Nextpos: %d ", quotient, nextpos);
   //udiv32(quotient, nextpos); 
   //fprintf(stderr,"After Divide Quotient: %d Nextpos: %d", quotient, nextpos);
   //nextpos = quotient%size; 
   //fprintf(stderr,"After Modulus Quotient: %d Nextpos: %d", quotient, nextpos);
-  nextpos = (*position+1)%*size;
-  buffer[*position] = 0.498*(buffer[*position]+buffer[nextpos]);
-//  *position = nextpos;
-  return buffer[*position];
+  nextpos = (*position+1)%size;
+  buffer[*position] = value =  0.498*(buffer[*position]+buffer[nextpos]);
+  *position = nextpos;
+  return value;
 }
 
 void scream_and_die(char progname[])
@@ -112,7 +113,7 @@ int main(int argc, char **argv)
   static unsigned int frequency[NUM_NOTES];
   static unsigned int active[NUM_NOTES] = {0};
   static unsigned int max[NUM_NOTES] = {0};
-  unsigned int temp;
+  unsigned int stackpointer = 0;
   unsigned int currentSample = 0;
   register unsigned int i,j;
   FILE *input;
@@ -125,7 +126,8 @@ int main(int argc, char **argv)
   int16_t sample;
   struct filedat next_note;
   time_it run_time; 
- 
+
+
   if(argc < 2)
     scream_and_die(argv[0]);
   
@@ -186,17 +188,17 @@ int main(int argc, char **argv)
 	      {
 		sum = 0.0;
 		// average each active string and add its output to the sum
-		for(j = 0; j < temp; j++)
+		for(j = 0; j < stackpointer; j++)
 		{
-	          sum += average(notes[active[j]],&frequency[active[j]],
+	          sum += average(notes[active[j]],frequency[active[j]],
 		  &position[active[j]]);
-		  if(max[j] < currentSample + i)
+		  if(max[j] < currentSample + 1)
 		  {
-			active[j] = active[temp - 1];
-			active[temp - 1] = 0;
-			max[j] = max[temp - 1];
-			max[temp - 1] = 0;
-			temp--;
+			active[j] = active[stackpointer - 1];
+			active[stackpointer - 1] = 0;
+			max[j] = max[stackpointer - 1];
+			max[stackpointer - 1] = 0;
+			stackpointer--;
 			j--;  
 		  }
 		}
@@ -216,10 +218,14 @@ int main(int argc, char **argv)
 	{
 	  pluck(notes[next_note.note],frequency[next_note.note],
 		next_note.vol/32767.0);
-	  for(i = 0; i < temp; i++)
+	  //active[]
+	  for(i = 0; i < stackpointer; i++)
             if(next_note.note == active[i])
 	     break;
 	  active[i] = next_note.note;
+	  max[i] = currentSample + frequency[next_note.note] * 450;
+	  if( i == stackpointer)
+		stackpointer++;
 	}
       }
   }while(!feof(input));   
