@@ -40,7 +40,7 @@
 */
 static unsigned int array_size(int note)
 {
-  static unsigned int N;
+  register unsigned int N;
   double hz;
   hz = pow(2,(note-69.0)/12.0) * 440;
   N = (int)(SAMPLE_RATE/hz + 0.5);
@@ -52,7 +52,7 @@ static unsigned int array_size(int note)
 */
 void pluck(double buffer[], int size, double volume)
 {
-  int i;
+  register unsigned int i;
   for(i = 0; i < size; i++)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
@@ -67,14 +67,10 @@ long udiv32(int quotient, int remainder);
 
 static double average(double buffer[], int size, int *position)
 {
-  unsigned int nextpos;
-  unsigned int quotient = (*position+1);
+  register unsigned int nextpos;
+  register unsigned int quotient = (*position+1);
   double value;
-  //fprintf(stderr,"Before Divide Quotient: %d Size: %d\n", quotient, size);
   nextpos = udiv32(quotient, size);
-//  fprintf(stderr,"After Divide Quotient: %d Size: %d Nextpos: %d\n", quotient, size, nextpos);
-  //fprintf(stderr, "Quotient: %d Size: %d\n",quotient,size);
-  //nextpos = (*position+1)%size;
   buffer[*position] = value =  0.498*(buffer[*position]+buffer[nextpos]);
   *position = nextpos;
   return value;
@@ -102,16 +98,14 @@ struct filedat{
 int main(int argc, char **argv)
 {
   static double notes[NUM_NOTES][BASE_SIZE] = {0};
-//  static double **notes;
-//  notes = (double **) malloc(sizeof(double *) * 120);
   static unsigned int position[NUM_NOTES] = {0};
-  static int16_t sam_buffer[SAMPLE_RATE];
+  static uint16_t sam_buffer[SAMPLE_RATE];
   static unsigned int sam_buffer_pos = 0;
   static unsigned int frequency[NUM_NOTES];
   static unsigned int active[NUM_NOTES] = {0};
   static unsigned int max[NUM_NOTES] = {0};
-  unsigned int stackpointer = 0;
-  unsigned int currentSample = 0;
+  register unsigned int stackpointer = 0;
+  register unsigned int currentSample = 0;
   register unsigned int i,j;
   FILE *input;
   FILE *output = stdout;
@@ -120,7 +114,7 @@ int main(int argc, char **argv)
   double sum;
   char *endptr;
   register unsigned int num_samples;
-  int16_t sample;
+  register uint16_t sample;
   struct filedat next_note;
   time_it run_time; 
 
@@ -151,12 +145,6 @@ int main(int argc, char **argv)
    frequency[i] = array_size(i);	
   }
 
-/*
-  for(i = 0; i < 120; i++ )
-  {
-	notes[i] = (double *) malloc(sizeof(double) * frequency[i]);
-  }
-*/
   time_it_start(&run_time);
 
   //find time of for end of song
@@ -220,7 +208,7 @@ int main(int argc, char **argv)
             if(next_note.note == active[i])
 	     break;
 	  active[i] = next_note.note;
-	  max[i] = currentSample + frequency[next_note.note] * 450;
+	  max[i] = currentSample + frequency[next_note.note] * 375;
 	  if( i == stackpointer)
 		stackpointer++;
 	}
