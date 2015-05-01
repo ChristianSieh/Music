@@ -208,7 +208,7 @@ int main(int argc, char **argv)
             if(next_note.note == active[i])
 	     break;
 	  active[i] = next_note.note;
-	  max[i] = currentSample + frequency[next_note.note] * 375;
+	  max[i] = currentSample + frequency[next_note.note] * 350;
 	  if( i == stackpointer)
 		stackpointer++;
 	}
