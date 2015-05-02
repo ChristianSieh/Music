@@ -1,6 +1,7 @@
 /* Stringed Instrument Heroine (TM)
    Author: Larry Pyeatt
-   Date: 11-1-2012
+   Optimized: Christian Sieh
+   Date: 5/1/2015
   (C) All rights reserved
 
    This program uses to Karplus-Strong algorithm to simulate a
@@ -26,11 +27,10 @@
 #include <math.h>
 #include <unistd.h>
 
-#define SAMPLE_RATE 44100 //Can't change this line
-#define NUM_NOTES (120) //might be able to change this line
-#define BASE_SIZE (44100/16) //Can't change this line
-#define SMPLS_PER_MS (441) //Can't change this line
-#define CUTOFF_THRESHOLD .005
+#define SAMPLE_RATE 44100
+#define NUM_NOTES (120)
+#define BASE_SIZE (44100/16)
+#define SMPLS_PER_MS (441)
 
 #define INT16_T_MAX (0x7FFF)
 
@@ -57,6 +57,7 @@ void pluck(double buffer[], int size, double volume)
     buffer[i] = volume * ((double)rand()/RAND_MAX - 0.5);
 }
 
+//Assembly function that replaces modulus in the average function
 long udiv32(int quotient, int remainder);
 
 /* The average function treats the array as a queue.  The
@@ -76,6 +77,7 @@ static double average(double buffer[], int size, int *position)
   return value;
 }
 
+//Prints Usage statement if incorrect arguements are given
 void scream_and_die(char progname[])
 {
   fprintf(stderr,"Usage: %s input_file <tempo>\n",progname);;
@@ -84,6 +86,7 @@ void scream_and_die(char progname[])
   exit(1);
 }
 
+//Structure for the notes
 struct filedat{
   int32_t time;
   int16_t note;
@@ -116,8 +119,6 @@ int main(int argc, char **argv)
   register unsigned int num_samples;
   register uint16_t sample;
   struct filedat next_note;
-  time_it run_time; 
-
 
   if(argc < 2)
     scream_and_die(argv[0]);
@@ -134,21 +135,20 @@ int main(int argc, char **argv)
       tempo = 1.0/tempo;
     }
 
+  //Check if input file opened
   if((input = fopen(argv[1],"r"))==NULL)
     {
       perror("Unable to open input file");
       scream_and_die(argv[0]);
     }
-   
+  
+  //Get all the natural frequencies for the notes and store in array 
   for(i = 0; i < 120; i++)
   {
    frequency[i] = array_size(i);	
   }
 
-  time_it_start(&run_time);
-
   //find time of for end of song
-  //TODO Seek to end and read last note for time
   while((fread(&next_note,sizeof(next_note),1,input)==1)&&
 	(next_note.note != 1));
   fseek(input,0,SEEK_SET);
@@ -177,33 +177,39 @@ int main(int argc, char **argv)
 		{
 	          sum += average(notes[active[j]],frequency[active[j]],
 		  &position[active[j]]);
+		  //Kill note and active notes so we only play notes that are
+		  //currently producing sound
 		  if(max[j] < currentSample + 1)
 		  {
-			active[j] = active[stackpointer - 1];
-			active[stackpointer - 1] = 0;
-			max[j] = max[stackpointer - 1];
-			max[stackpointer - 1] = 0;
-			stackpointer--;
-			j--;  
+		    active[j] = active[stackpointer - 1];
+		    active[stackpointer - 1] = 0;
+		    max[j] = max[stackpointer - 1];
+		    max[stackpointer - 1] = 0;
+		    stackpointer--;
+		    j--;  
 		  }
 		}
+		//Store the sample so we only write once a ms instead of 441
+		//times a ms
 		sample = (int16_t)(sum * 32766);
+
 		if(sam_buffer_pos >= SAMPLE_RATE)
 		{
 		  fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
 		  sam_buffer_pos = 0;
 		}
-		  sam_buffer[sam_buffer_pos++] = sample;
+		sam_buffer[sam_buffer_pos++] = sample;
 	      }
 	      currentSample += 441;
 	      current_time++;
 	  }
+
 	//pluck the next note
 	if(next_note.note >= 0)
 	{
 	  pluck(notes[next_note.note],frequency[next_note.note],
 		next_note.vol/32767.0);
-	  //active[]
+	  //Used for killing nodes and defining if they are active
 	  for(i = 0; i < stackpointer; i++)
             if(next_note.note == active[i])
 	     break;
@@ -221,10 +227,6 @@ int main(int argc, char **argv)
 	fwrite(sam_buffer,sizeof(int16_t),sam_buffer_pos,output);
 	sam_buffer_pos = 0;
   }
- 
-  time_it_stop(&run_time);
-
-  time_it_report(&run_time, "Total Time: ");
 
   fclose(input);
   fclose(output);
